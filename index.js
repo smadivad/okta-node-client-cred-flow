@@ -6,12 +6,36 @@ const oktaClient = new okta.Client({
   orgUrl: process.env.ORG_URL,
   token: process.env.TOKEN,
 })
+const request = require('request-promise')
 
 const app = express()
 
-const oktaJwtVerifier = new OktaJwtVerifier({
-  issuer: process.env.ISSUER,
-})
+const issuer = `${process.env.ORG_URL}/oauth2/${process.env.AUTH_SERVER_ID}`
+const oktaJwtVerifier = new OktaJwtVerifier({ issuer })
+
+const cache = {
+  expiration: null,
+  scopes: [],
+}
+
+const hasScope = async (scope) => {
+  if (new Date() > cache.expiration) {
+    const scopes = await request({
+      uri: `${process.env.ORG_URL}/api/v1/authorizationServers/${process.env.AUTH_SERVER_ID}/scopes`,
+      headers: {
+        authorization: `SSWS ${process.env.TOKEN}`,
+      },
+      json: true,
+    })
+
+    cache.expiration = new Date()
+    cache.scopes = scopes
+      .filter(scope => scope.metadataPublish === 'NO_CLIENTS')
+      .map(scope => scope.name)
+  }
+
+  return cache.scopes.includes(scope)
+}
 
 app.get('/', async (req, res) => {
   try {
@@ -28,8 +52,11 @@ app.get('/', async (req, res) => {
   }
 })
 
-app.get('/register/:label', async (req, res) => {
+app.get('/register/:scope/:label', async (req, res) => {
   try {
+    const isValidScope = await hasScope(req.params.scope)
+    if (!isValidScope) throw new Error('Invalid scope')
+
     const application = await oktaClient.createApplication({
       name: 'oidc_client',
       label: req.params.label,
@@ -50,7 +77,7 @@ app.get('/register/:label', async (req, res) => {
     res.json({
       client_id,
       client_secret,
-      request_token_url: `${process.env.ISSUER}/v1/token`,
+      request_token_url: `${issuer}/v1/token`,
     })
   } catch (error) {
     res.json({ error: error.message })
