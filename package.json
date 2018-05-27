@@ -13,6 +13,7 @@
   "dependencies": {
     "@okta/jwt-verifier": "^0.0.12",
     "@okta/okta-sdk-nodejs": "^1.1.0",
+    "btoa": "^1.2.1",
     "dotenv": "^5.0.1",
     "express": "^4.16.3",
     "request-promise": "^4.2.2"
