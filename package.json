@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@okta/jwt-verifier": "^0.0.12",
+    "@okta/okta-sdk-nodejs": "^1.1.0",
     "dotenv": "^5.0.1",
     "express": "^4.16.3"
   },
