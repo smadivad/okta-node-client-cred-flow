@@ -11,6 +11,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@okta/jwt-verifier": "^0.0.12",
+    "dotenv": "^5.0.1",
     "express": "^4.16.3"
   },
   "devDependencies": {
